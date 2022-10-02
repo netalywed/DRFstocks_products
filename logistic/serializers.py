@@ -12,7 +12,7 @@ class ProductPositionSerializer(serializers.ModelSerializer):
     # настройте сериализатор для позиции продукта на складе
     class Meta:
         model = StockProduct
-        fields = ['stock', 'product', 'quantity', 'price']
+        fields = ['product', 'quantity', 'price'] #'stock',
 
 
 class StockSerializer(serializers.ModelSerializer):
@@ -21,7 +21,8 @@ class StockSerializer(serializers.ModelSerializer):
     # настройте сериализатор для склада
     class Meta:
         model = Stock
-        fields = ['address', 'positions']
+        fields = ['id', 'address', 'positions']
+
 
     def create(self, validated_data):
         # достаем связанные данные для других таблиц
@@ -34,29 +35,47 @@ class StockSerializer(serializers.ModelSerializer):
         # в нашем случае: таблицу StockProduct
         # с помощью списка positions
         for position in positions:
-            stock_info = position["stock"]
             product_info = position["product"]
             quantity_info = position["quantity"]
             price_info = position["price"]
-            StockProduct.objects.create(stock=stock_info, product=product_info, quantity=quantity_info, price=price_info)
-
+            StockProduct.objects.create(stock=stock, product=product_info, quantity=quantity_info, price=price_info) #
         return stock
 
-    def update(self, instance, validated_data):
+
+    def update_or_create(self, validated_data):
         # достаем связанные данные для других таблиц
         positions = validated_data.pop('positions')
 
-        # обновляем склад по его параметрам
-        stock = super().update(instance, validated_data)
+        # создаем склад по его параметрам
+        stock = super().update_or_create(validated_data)
 
-        # здесь вам надо обновить связанные таблицы
+        # здесь вам надо заполнить связанные таблицы
         # в нашем случае: таблицу StockProduct
         # с помощью списка positions
         for position in positions:
-            stock_info = position["stock"]
+            # stock_info = position["stock"]
             product_info = position["product"]
             quantity_info = position["quantity"]
             price_info = position["price"]
-            StockProduct.objects.update(stock=stock_info, product=product_info, quantity=quantity_info, price=price_info)
+            StockProduct.objects.update_or_create(product=product_info, quantity=quantity_info, price=price_info) #stock=stock_info,
 
         return stock
+    #
+    # def update(self, instance, validated_data):
+    #     # достаем связанные данные для других таблиц
+    #     positions = validated_data.pop('positions')
+    #
+    #     # обновляем склад по его параметрам
+    #     stock = super().update(instance, validated_data)
+    #
+    #     # здесь вам надо обновить связанные таблицы
+    #     # в нашем случае: таблицу StockProduct
+    #     # с помощью списка positions
+    #     for position in positions:
+    #         # stock_info = position["stock"]
+    #         product_info = position["product"]
+    #         quantity_info = position["quantity"]
+    #         price_info = position["price"]
+    #         StockProduct.objects.update(product=product_info, quantity=quantity_info, price=price_info) #stock=stock_info,
+    #
+    #     return stock
